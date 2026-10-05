@@ -1,0 +1,47 @@
+{
+  "apelido": "Sontoku",
+  "nome": "Reativação",
+  "resumo": "Reativação & Mix: carteira, positivação, mensagens pros vendedores (Copilot), hierarquia, bases de clientes, conversas, métricas, sinais, portal. Código no reactivation-service, geodriva e hub; muitas vezes é dado ou configuração.",
+  "exemplos": [
+    "Vendedora recebendo mensagem de outro vendedor",
+    "Mudar a data do portal e o período pra 15 dias num cliente",
+    "As conversas de um cliente não aparecem no hub",
+    "Configurar a reativação de um cliente pra liberar o filtro de vendedores no mapa"
+  ],
+  "naoE": [
+    "tela do mapa sem relação com carteira/vendedor → mapa"
+  ],
+  "repos": [
+    "reactivation-service",
+    "geodriva",
+    "hub-driva"
+  ],
+  "workspace": "obrigatorio",
+  "campos": [
+    {
+      "campo": "afetado",
+      "pergunta": "Quem ou o que é afetado? (vendedor, regra, base, tela)",
+      "obrigatorio": true
+    },
+    {
+      "campo": "hoje",
+      "pergunta": "O que acontece hoje? (se tiver print, ajuda muito)",
+      "obrigatorio": "bug"
+    },
+    {
+      "campo": "esperado",
+      "pergunta": "O que deveria acontecer?",
+      "obrigatorio": true
+    }
+  ],
+  "plano": {
+    "modelo": "opus",
+    "esforco": "high"
+  },
+  "execucao": {
+    "modelo": "sonnet",
+    "esforco": "high"
+  },
+  "deploy": "Código: PR contra a branch que está no ar (reactivation-service) ou a main (geodriva/hub); o deploy do reactivation-service ainda é manual. Dado/configuração: só com o ok do Yago.",
+  "ondeTestar": "Depende: leitura em prod pra diagnóstico, local pra código."
+}

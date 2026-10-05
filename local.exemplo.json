@@ -1,0 +1,15 @@
+{
+  "emailDoDono": "voce@suaempresa.com",
+  "dominios": [
+    "suaempresa.com"
+  ],
+  "workspaceTeste": {
+    "id": "00000000-0000-0000-0000-000000000000",
+    "nome": "Workspace de teste"
+  },
+  "workspacesProtegidos": {
+    "abcd1234": "Cliente sensível A"
+  },
+  "prodSshHost": "prod",
+  "deploySsh": "ssh ubuntu@seu-servidor 'bash /home/ubuntu/seu-repo/scripts/{}'"
+}

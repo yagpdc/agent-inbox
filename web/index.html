@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Inbox Agent</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 10' shape-rendering='crispEdges'><rect x='2' width='10' height='7' fill='%23d97757'/><rect y='3' width='14' height='2' fill='%23d97757'/><rect x='4' y='2' width='1' height='2' fill='%23000'/><rect x='9' y='2' width='1' height='2' fill='%23000'/><rect x='3' y='7' width='1' height='3' fill='%23d97757'/><rect x='5' y='7' width='1' height='3' fill='%23d97757'/><rect x='8' y='7' width='1' height='3' fill='%23d97757'/><rect x='10' y='7' width='1' height='3' fill='%23d97757'/></svg>"
+    />
+  </head>
+  <body>
+    <div class="app" id="app">
+      <aside class="menu">
+        <div class="marca"><span id="marca-pet"></span>Inbox Agent</div>
+        <nav id="menu"></nav>
+
+        <div class="menu-rodape vigia">
+          <button class="execucao" id="execucao" title="Pausado: o orquestrador continua conversando e criando tarefas, mas nenhum agente começa">
+            <span class="execucao-luz"></span>
+            <span class="execucao-texto"><b>Executores</b></span>
+            <span class="execucao-acao" id="execucao-acao"></span>
+          </button>
+          <div class="jornada" id="jornada" title="Conta enquanto o notebook está ligado e acordado; pausa sozinho quando ele dorme ou desliga">
+            <div class="jornada-topo">
+              <span>Horas trabalhadas</span>
+              <b id="jornada-tempo">0h 00</b>
+            </div>
+            <div class="jornada-barra"><i id="jornada-barra"></i></div>
+            <span class="jornada-meta" id="jornada-meta"></span>
+          </div>
+          <label class="movel-linha">
+            <span>Modo celular</span>
+            <span class="chave">
+              <input type="checkbox" id="movel" />
+              <span></span>
+            </span>
+          </label>
+          <div class="pet-linha">
+            <span id="coluna-pet"></span>
+            <div class="pet-fala">
+              <b>Fala comigo</b>
+              <span class="coluna-situacao" id="coluna-situacao"></span>
+            </div>
+            <span class="luz" title="Vigia do Chat"></span>
+          </div>
+        </div>
+      </aside>
+
+      <section class="lista" id="lista">
+        <div class="lista-cabecalho">
+          <h2></h2>
+          <label class="busca"><span id="ic-busca"></span><input id="busca" placeholder="Buscar" /></label>
+          <select id="pessoa"></select>
+        </div>
+        <div class="linhas"></div>
+      </section>
+
+      <main class="leitura" id="leitura"></main>
+
+      <aside class="coluna" id="coluna">
+        <!-- recolhida: só esta faixa aparece; clicar abre de novo -->
+        <button class="coluna-trilho" data-coluna="abrir" title="Abrir Decisões e Conversa">
+          <span class="coluna-trilho-seta" id="trilho-seta"></span>
+          <span class="coluna-trilho-conta" id="trilho-conta"></span>
+          <span class="coluna-trilho-rotulo">Decisões</span>
+        </button>
+        <section class="bloco-coluna avisos">
+          <header>
+            <h3>Decisões</h3>
+            <span class="bloco-conta" id="avisos-conta"></span>
+            <button class="coluna-fechar" data-coluna="fechar" title="Recolher pra direita" id="coluna-fechar"></button>
+          </header>
+          <div class="avisos-corpo">
+            <div class="baloes" id="toasts"></div>
+            <div class="pendentes-coluna" id="pendentes"></div>
+          </div>
+        </section>
+
+        <section class="rodando-agora" id="rodando-agora" hidden></section>
+
+        <section class="bloco-coluna conversa">
+          <header>
+            <h3>Conversa</h3>
+            <span class="bloco-conta" id="conversa-estado"></span>
+          </header>
+          <div class="conversa-cabecalho" id="conversa-cabecalho"></div>
+          <div class="conversa-corpo" id="conversa-corpo"></div>
+          <p class="conversa-destino" id="conversa-destino"></p>
+          <div id="conversa-anexos"></div>
+          <div class="conversa-escrever">
+            <textarea id="conversa-campo" rows="2"></textarea>
+            <button class="btn primario" id="conversa-enviar">Enviar</button>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <div class="pet-baloes" id="pet-baloes"></div>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

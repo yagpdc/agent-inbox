@@ -1,0 +1,19 @@
+# dados e segredos desta instalação: nunca vão pro git
+tarefas.db
+tarefas.db-*
+tarefas.db.*
+credenciais/
+local.json
+anexos/
+entregas/
+logs/
+pausado
+
+# conhecimento de cada instalação (clientes, hosts, pessoas): fica só na máquina
+agentes/*/CONTEXTO.md
+agentes/*/APRENDIZADOS.md
+agentes/_comum/*.md
+agentes/_comum/workspaces.json
+
+__pycache__/
+*.pyc

@@ -1,0 +1,47 @@
+{
+  "apelido": "Tadataka",
+  "nome": "Mapa",
+  "resumo": "Features e bugs do mapa (Inteligência Geográfica) no hub: busca por empresa/endereço, pins, filtros do mapa, camadas nativas (empresas, places, censo, agro), cards, layout do mapa, Assistente de Camadas. Backend no geodriva.",
+  "exemplos": [
+    "A busca por endereço com número sumiu no layout novo",
+    "O mapa vai até a empresa mas não mostra o pin",
+    "Arrumar o seletor de região e o dropdown Métricas da carteira no mapa"
+  ],
+  "naoE": [
+    "subir ou mexer numa camada feita com a base de um cliente (pontos, prédios, cidades do cliente) → camadas",
+    "filtro que só existe numa camada de cliente → camadas",
+    "carteira/vendedores/positivação dentro do mapa → reativacao"
+  ],
+  "repos": [
+    "hub-driva",
+    "geodriva"
+  ],
+  "workspace": "se_bug",
+  "campos": [
+    {
+      "campo": "onde",
+      "pergunta": "Em que parte do mapa? (busca, filtro, camada, card, painel)",
+      "obrigatorio": true
+    },
+    {
+      "campo": "hoje",
+      "pergunta": "O que acontece hoje? (se tiver print, ajuda muito)",
+      "obrigatorio": "bug"
+    },
+    {
+      "campo": "esperado",
+      "pergunta": "O que deveria acontecer?",
+      "obrigatorio": true
+    }
+  ],
+  "plano": {
+    "modelo": "opus",
+    "esforco": "high"
+  },
+  "execucao": {
+    "modelo": "sonnet",
+    "esforco": "high"
+  },
+  "deploy": "PR contra a main do repo que mudou (hub ou geodriva). Merge no geodriva roda o script de deploy; no hub, build automático.",
+  "ondeTestar": "O diff no PR; depois do merge, no hub (prod)."
+}

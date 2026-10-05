@@ -1,0 +1,22 @@
+{
+  "apelido": "Dogen",
+  "nome": "Dúvida",
+  "resumo": "Perguntas que se respondem pesquisando, sem mudar nada: como algo funciona, se já foi feito, andamento de um pedido, onde testar, o que significa um número.",
+  "exemplos": [
+    "A busca funciona pra todas as localidades?",
+    "Isso já subiu?",
+    "Tem como dar zoom automático?"
+  ],
+  "naoE": [
+    "se a resposta for 'não existe, precisa fazer' → vira pedido do agente certo"
+  ],
+  "repos": [],
+  "workspace": "opcional",
+  "campos": [],
+  "pesquisa": {
+    "modelo": "sonnet",
+    "esforco": "medium"
+  },
+  "deploy": "Não tem: a resposta vai direto pra pessoa.",
+  "ondeTestar": ""
+}

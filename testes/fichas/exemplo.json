@@ -1,0 +1,11 @@
+{
+  "tipo": "mapa",
+  "sub": "feature",
+  "titulo": "Buscar empresa pelo endereço com número no mapa",
+  "pedido": "No mapa, dá pra buscar empresas por endereço, mas o número do local é ignorado.",
+  "criterio": "Digitar um endereço com número leva o mapa até o local e mostra a empresa daquele endereço.",
+  "workspace": null,
+  "campos": {},
+  "prioridade": "P2",
+  "prazo": null
+}

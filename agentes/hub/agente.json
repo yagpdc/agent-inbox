@@ -1,0 +1,47 @@
+{
+  "apelido": "Rikyu",
+  "nome": "Hub",
+  "resumo": "Telas do produto hub-driva fora do mapa e da reativação: listas, filtros de busca, abas, navegação, layout geral, feature flags, visual. Com o backend no geodriva quando precisar.",
+  "exemplos": [
+    "Alinhar textos e ícones das abas com o seletor Base CNPJ",
+    "Remover a feature flag do layout novo",
+    "Adicionar uma linha no divisor dos filtros, igual a Camadas do Mapa"
+  ],
+  "naoE": [
+    "mapa (Inteligência Geográfica) → mapa",
+    "carteira, positivação, conversas, métricas de vendedor → reativacao",
+    "camada com base do cliente → camadas"
+  ],
+  "repos": [
+    "hub-driva",
+    "geodriva"
+  ],
+  "workspace": "se_bug",
+  "campos": [
+    {
+      "campo": "onde",
+      "pergunta": "Em que tela do hub?",
+      "obrigatorio": true
+    },
+    {
+      "campo": "hoje",
+      "pergunta": "O que acontece hoje? (se tiver print, ajuda muito)",
+      "obrigatorio": "bug"
+    },
+    {
+      "campo": "esperado",
+      "pergunta": "O que deveria acontecer?",
+      "obrigatorio": true
+    }
+  ],
+  "plano": {
+    "modelo": "opus",
+    "esforco": "high"
+  },
+  "execucao": {
+    "modelo": "sonnet",
+    "esforco": "high"
+  },
+  "deploy": "PR da branch da tarefa (sai de origin/main) contra a main. O Yago revisa no GitHub; o merge dispara o build (~15 min).",
+  "ondeTestar": "O diff no PR; depois do merge, no hub (prod)."
+}

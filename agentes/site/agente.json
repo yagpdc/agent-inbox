@@ -1,0 +1,39 @@
+{
+  "apelido": "Basho",
+  "nome": "Site",
+  "resumo": "Site institucional driva.io e landing pages (LPs de evento, home, páginas de produto).",
+  "exemplos": [
+    "Atualizar a agenda da LP do GTM Summit",
+    "Colocar uma palestrante nova na LP",
+    "Trocar o número de empresas atendidas em todas as páginas"
+  ],
+  "naoE": [
+    "qualquer tela do produto (hub) → hub ou mapa"
+  ],
+  "repos": [
+    "drivaio"
+  ],
+  "workspace": "nao",
+  "campos": [
+    {
+      "campo": "pagina",
+      "pergunta": "Qual página do site? (link ou nome)",
+      "obrigatorio": true
+    },
+    {
+      "campo": "conteudo",
+      "pergunta": "Qual o conteúdo final? (texto, programação, imagem: o que for entrar)",
+      "obrigatorio": true
+    }
+  ],
+  "plano": {
+    "modelo": "opus",
+    "esforco": "high"
+  },
+  "execucao": {
+    "modelo": "sonnet",
+    "esforco": "medium"
+  },
+  "deploy": "PR contra a main do drivaio. O merge publica o driva.io.",
+  "ondeTestar": "O diff no PR; depois do merge, no driva.io."
+}

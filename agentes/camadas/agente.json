@@ -1,0 +1,46 @@
+{
+  "apelido": "Hokusai",
+  "nome": "Camadas personalizadas",
+  "resumo": "Camadas feitas com a base própria de um cliente no mapa (BYOL): criar a partir de planilha, subir CNPJs, cores, rótulos, filtros e hexágonos da camada, copiar entre workspaces, corrigir camada existente.",
+  "exemplos": [
+    "Subir a planilha com os CNPJs das empresas de Copacabana",
+    "Filtro por cidade e por faturamento no mapa de um cliente",
+    "Criar a camada de lojas de um cliente com mais informações por linha"
+  ],
+  "naoE": [
+    "bug ou feature do mapa em si, que vale pra todo cliente → mapa"
+  ],
+  "repos": [],
+  "workspace": "obrigatorio",
+  "campos": [
+    {
+      "campo": "base",
+      "pergunta": "Qual a base? (manda a planilha/arquivo, ou diz qual camada já existe)",
+      "obrigatorio": true
+    },
+    {
+      "campo": "mostrar",
+      "pergunta": "O que a camada deve mostrar? (cor por quê, o que aparece no card, filtros)",
+      "obrigatorio": true
+    },
+    {
+      "campo": "nome",
+      "pergunta": "Que nome a camada deve ter?",
+      "obrigatorio": false
+    }
+  ],
+  "plano": {
+    "modelo": "opus",
+    "esforco": "high"
+  },
+  "execucao": {
+    "modelo": "sonnet",
+    "esforco": "high"
+  },
+  "workspaceTeste": {
+    "id": "(definido em local.json)",
+    "nome": "Workspace de teste"
+  },
+  "deploy": "Sobe primeiro no workspace de teste pro Yago validar; com o ok dele, grava no workspace do cliente e confere no banco.",
+  "ondeTestar": "Mapa no workspace de teste."
+}
