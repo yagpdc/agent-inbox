@@ -1,0 +1,883 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Como meus agentes trabalham</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  /* Paleta e fontes da marca Driva (drivaio/app/globals.css) */
+  :root {
+    --bg: #F8F9FC;
+    --surface: #FFFFFF;
+    --navy: #003355;
+    --navy-2: #0B4470;
+    --navy-3: #1D5B8A;
+    --ink: #07131E;
+    --body: #475467;
+    --muted: #667085;
+    --line: #E4E7EC;
+    --line-strong: #C9D2DD;
+    --orange: #F07F2D;
+    --orange-soft: #FDEBDD;
+    --on-navy: #C9D4DF;
+    --head: "Lexend", system-ui, sans-serif;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+    --shadow: 0 1px 2px rgba(7, 19, 30, .04), 0 12px 32px -12px rgba(7, 19, 30, .18);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body { background: var(--bg); color: var(--body); font-family: var(--sans); -webkit-font-smoothing: antialiased; user-select: none; }
+
+  /* ================= deck: trilho horizontal ================= */
+  .deck { position: fixed; inset: 0; overflow: hidden; }
+  .track { display: flex; height: 100%; transition: transform .75s cubic-bezier(.65, 0, .35, 1); will-change: transform; }
+  .slide { flex: 0 0 100vw; height: 100%; overflow-y: auto; scrollbar-width: none; display: flex;
+           background-image: radial-gradient(#D9E0E8 1px, transparent 1.3px); background-size: 26px 26px; }
+  .slide::-webkit-scrollbar { display: none; }
+  .slide.dark { background-color: var(--navy); background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1.3px); color: var(--on-navy); }
+  .frame { width: 100%; max-width: 1360px; margin: auto; padding: 8vh 6vw 10vh; display: flex; flex-direction: column; gap: 4vh; }
+  .split { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); gap: 5vw; align-items: center; }
+  .split.flip { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .copy { display: grid; gap: 3.2vh; align-content: center; }
+  .stage { display: grid; place-items: center; min-width: 0; }
+
+  /* entrada escalonada quando o slide chega */
+  .rise { transition: opacity .6s ease var(--d, .25s), transform .6s cubic-bezier(.2, .7, .2, 1) var(--d, .25s); }
+  .slide:not(.on) .rise { opacity: 0; transform: translateY(18px); }
+
+  /* ================= tipografia ================= */
+  .tag { font-family: var(--mono); font-size: clamp(.72rem, .95vw, .9rem); letter-spacing: .1em; text-transform: uppercase; color: var(--orange); font-weight: 500; }
+  h1 { font-family: var(--head); font-weight: 700; font-size: clamp(2.6rem, 5.8vw, 5.6rem); line-height: 1.02; letter-spacing: -.03em; color: #fff; max-width: 12ch; }
+  h2 { font-family: var(--head); font-weight: 700; font-size: clamp(1.8rem, 3.6vw, 3.4rem); line-height: 1.08; letter-spacing: -.025em; color: var(--navy); text-wrap: balance; }
+  .dark h2 { color: #fff; }
+  h3 { font-family: var(--head); font-weight: 600; font-size: clamp(1.05rem, 1.55vw, 1.5rem); color: var(--ink); letter-spacing: -.01em; }
+  .lead { font-size: clamp(1.02rem, 1.6vw, 1.5rem); line-height: 1.45; max-width: 44ch; }
+  .dark .lead { color: var(--on-navy); }
+  p { font-size: clamp(.92rem, 1.3vw, 1.2rem); line-height: 1.5; }
+  b { font-weight: 600; color: var(--ink); }
+  .dark b { color: #fff; }
+  .o { color: var(--orange); }
+  .mono { font-family: var(--mono); }
+
+  .points { list-style: none; display: grid; gap: 1.8vh; }
+  .points li { position: relative; padding-left: 1.5em; font-size: clamp(.98rem, 1.45vw, 1.35rem); line-height: 1.45; }
+  .points li::before { content: ""; position: absolute; left: 0; top: .5em; width: .6em; height: .6em; border-radius: 50%; background: var(--orange); }
+
+  /* lista compacta com bolinha numerada */
+  .rows { list-style: none; display: grid; gap: 1.6vh; }
+  .rows li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: start; font-size: clamp(.95rem, 1.35vw, 1.25rem); line-height: 1.4; }
+  .rows .n { width: 1.9em; height: 1.9em; border-radius: 50%; background: var(--navy); color: #fff; display: grid; place-items: center; font-family: var(--head); font-weight: 600; font-size: .85em; }
+  .rows code { font-family: var(--mono); color: var(--navy); font-weight: 500; font-size: .9em; }
+
+  /* ================= peças comuns ================= */
+  .window { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; width: 100%; }
+  .window .bar { display: flex; align-items: center; gap: 7px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: #FBFCFD; }
+  .window .bar i { width: 11px; height: 11px; border-radius: 50%; background: #E4E7EC; }
+  .window .bar span { margin-left: 8px; font-family: var(--mono); font-size: clamp(.7rem, .85vw, .82rem); color: var(--muted); }
+  .av { flex: none; width: 2.4em; height: 2.4em; border-radius: 50%; display: grid; place-items: center; font-family: var(--head); font-weight: 600; font-size: clamp(.7rem, .9vw, .85rem); color: #fff; background: var(--navy-3); }
+
+  /* ================= 1 · órbita ================= */
+  .orbit { --r: min(17vw, 27vh); position: relative; width: calc(var(--r) * 2 + 120px); aspect-ratio: 1; }
+  .orbit .ring { position: absolute; inset: 60px; border-radius: 50%; border: 1.5px dashed rgba(255, 255, 255, .22); }
+  .orbit .ring.inner { inset: calc(60px + var(--r) * .45); border-style: solid; border-color: rgba(255, 255, 255, .08); }
+  .orbit .spin { position: absolute; inset: 0; animation: spin 70s linear infinite; }
+  .sat { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform: rotate(var(--a)) translateX(var(--r)) rotate(calc(-1 * var(--a))); }
+  .sat .cs { width: 0; height: 0; animation: spin 70s linear infinite reverse; }
+  .sat span { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; background: var(--navy-2); border: 1px solid rgba(255, 255, 255, .14); color: #fff; font-family: var(--head); font-weight: 500; font-size: clamp(.78rem, 1.05vw, 1rem); padding: .55em 1.05em; border-radius: 999px; }
+  .core { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: calc(var(--r) * .78); aspect-ratio: 1; border-radius: 50%; background: var(--orange); color: var(--ink); display: grid; place-items: center; text-align: center; font-family: var(--head); font-weight: 600; font-size: clamp(.85rem, 1.25vw, 1.2rem); box-shadow: 0 0 0 14px rgba(240, 127, 45, .14), 0 0 0 30px rgba(240, 127, 45, .06); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ================= 2 · caixa de DMs ================= */
+  .inbox { max-width: 520px; }
+  .inbox .head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+  .inbox .head b { font-family: var(--head); font-size: clamp(.95rem, 1.2vw, 1.15rem); }
+  .badge { background: #E5484D; color: #fff; font-family: var(--head); font-weight: 600; font-size: clamp(.72rem, .9vw, .85rem); border-radius: 999px; padding: .2em .65em; }
+  .msg { display: flex; gap: 12px; align-items: center; padding: 12px 20px; border-bottom: 1px solid var(--line); }
+  .msg .t { min-width: 0; flex: 1; display: grid; gap: 1px; }
+  .msg .t b { font-size: clamp(.82rem, 1vw, .95rem); }
+  .msg .t span { font-size: clamp(.8rem, 1vw, .95rem); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .msg .badge { background: var(--orange); color: var(--ink); }
+  .inbox .more { padding: 12px 20px; font-size: clamp(.8rem, 1vw, .92rem); color: var(--muted); font-style: italic; }
+
+  /* ================= 3 · ciclo ================= */
+  .cycle { width: min(100%, 64vh); }
+  .cycle svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .cycle .lbl { font-family: var(--head); font-weight: 600; font-size: 34px; fill: var(--navy); }
+  .cycle .num { font-family: var(--head); font-weight: 600; font-size: 26px; fill: #fff; }
+  .cycle .mid { font-family: var(--mono); font-size: 20px; fill: var(--muted); letter-spacing: 2px; }
+
+  /* ================= 4 · crachá ================= */
+  .badge-card { position: relative; width: min(100%, 470px); background: var(--surface); border-radius: 22px; box-shadow: var(--shadow); border: 1px solid var(--line); transform: rotate(-2.5deg); }
+  .badge-card .clip { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); width: 64px; height: 30px; border-radius: 10px; background: var(--line-strong); }
+  .badge-card .clip::after { content: ""; position: absolute; left: 50%; top: 9px; transform: translateX(-50%); width: 30px; height: 8px; border-radius: 4px; background: var(--bg); }
+  .badge-top { background: var(--navy); border-radius: 22px 22px 0 0; padding: 26px 26px 22px; display: flex; gap: 16px; align-items: center; color: var(--on-navy); }
+  .badge-top .av { width: 64px; height: 64px; font-size: 1.6rem; background: var(--orange); color: var(--ink); }
+  .badge-top b { display: block; color: #fff; font-family: var(--head); font-size: clamp(1.2rem, 1.7vw, 1.6rem); }
+  .badge-top span { font-size: clamp(.82rem, 1vw, .95rem); }
+  .field { padding: 14px 26px; border-top: 1px solid var(--line); display: grid; gap: 6px; }
+  .field:first-of-type { border-top: 0; }
+  .field .k { display: flex; gap: 8px; align-items: baseline; }
+  .field .k b { font-family: var(--head); font-size: clamp(.9rem, 1.1vw, 1.05rem); color: var(--navy); }
+  .field .k span { font-family: var(--mono); font-size: clamp(.66rem, .8vw, .78rem); color: var(--orange); text-transform: uppercase; letter-spacing: .06em; }
+  .field p { font-size: clamp(.85rem, 1.05vw, 1rem); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-family: var(--mono); font-size: clamp(.68rem, .82vw, .8rem); background: #F0F3F7; color: var(--navy); border-radius: 8px; padding: .3em .7em; }
+
+  /* ================= 5 · árvore ================= */
+  .tree { --stem: 2.6vh; --g: 1.1vw; display: grid; justify-items: center; width: 100%; }
+  .bubble { position: relative; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 18px 18px 18px 4px; padding: 12px 18px; display: flex; gap: 12px; align-items: center; font-size: clamp(.88rem, 1.15vw, 1.08rem); }
+  .bubble .who { font-family: var(--mono); font-size: .75em; color: var(--muted); display: block; }
+  .stem { width: 2px; height: calc(var(--stem) * 1.2); background: var(--line-strong); }
+  .root { position: relative; background: var(--navy); color: var(--on-navy); border-radius: 18px; padding: clamp(14px, 1.6vw, 24px) clamp(20px, 2.4vw, 36px); text-align: center; max-width: 560px; display: grid; gap: .6vh; box-shadow: var(--shadow); }
+  .root h3 { color: #fff; }
+  .root::after { content: ""; position: absolute; left: calc(50% - 1px); bottom: calc(-1 * var(--stem)); width: 2px; height: var(--stem); background: var(--line-strong); }
+  .leaves { position: relative; width: 100%; margin-top: calc(2 * var(--stem)); display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--g); }
+  .leaves::before { content: ""; position: absolute; top: calc(-1 * var(--stem)); left: calc((100% - 5 * var(--g)) / 12); right: calc((100% - 5 * var(--g)) / 12); height: 2px; background: var(--line-strong); }
+  .leaf { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: clamp(12px, 1.3vw, 20px) 8px; text-align: center; display: grid; justify-items: center; gap: .6vh; }
+  .leaf::before { content: ""; position: absolute; left: calc(50% - 1px); top: calc(-1 * var(--stem) - 1px); width: 2px; height: var(--stem); background: var(--line-strong); }
+  .leaf b { font-family: var(--head); font-weight: 600; font-size: clamp(.85rem, 1.15vw, 1.1rem); }
+  .leaf span { font-family: var(--mono); font-size: clamp(.64rem, .8vw, .78rem); color: var(--muted); }
+  .leaf .av { width: 2.6em; height: 2.6em; }
+  .leaf.pick { border-color: var(--orange); background: #FFF8F2; animation: pulse 2.2s ease-out infinite; }
+  .leaf.pick .av { background: var(--orange); color: var(--ink); }
+  .leaf.pick::before { background: var(--orange); }
+  .leaf .got { font-style: normal; position: absolute; top: -.9em; right: -.4em; background: var(--orange); color: var(--ink); font-family: var(--mono); font-size: clamp(.6rem, .72vw, .7rem); padding: .2em .55em; border-radius: 6px; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(240, 127, 45, .45); } 70%, 100% { box-shadow: 0 0 0 16px rgba(240, 127, 45, 0); } }
+
+  /* ================= 6 · explorador de pastas ================= */
+  .explorer .body { display: grid; grid-template-columns: minmax(140px, .62fr) minmax(0, 1.5fr); min-height: 46vh; }
+  .side { border-right: 1px solid var(--line); padding: 14px 10px; display: grid; gap: 2px; align-content: start; background: #FBFCFD; }
+  .node { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px; font-size: clamp(.78rem, .95vw, .92rem); color: var(--body); white-space: nowrap; }
+  .node.l1 { padding-left: 26px; }
+  .node.l2 { padding-left: 44px; }
+  .node.open { color: var(--ink); font-weight: 600; }
+  .node.sel { background: var(--orange-soft); color: var(--ink); }
+  .ico { flex: none; width: 15px; height: 12px; border-radius: 2px 3px 3px 3px; background: #9DB2C8; position: relative; }
+  .ico::before { content: ""; position: absolute; left: 0; top: -3px; width: 7px; height: 4px; border-radius: 2px 2px 0 0; background: inherit; }
+  .ico.open { background: var(--navy-3); }
+  .ico.file { width: 11px; height: 14px; border-radius: 2px; background: #CBD5E1; }
+  .ico.file::before { display: none; }
+  .node.sel .ico.file { background: var(--orange); }
+  .preview { padding: 18px 22px; display: grid; gap: 10px; align-content: start; font-family: var(--mono); font-size: clamp(.72rem, .88vw, .86rem); line-height: 1.55; color: var(--body); }
+  .preview .h { color: var(--navy); font-weight: 500; }
+  .preview .add { background: #FFF4EA; border-left: 3px solid var(--orange); padding: 2px 8px; color: var(--ink); }
+  .preview .tagx { justify-self: start; font-size: .8em; color: var(--muted); border: 1px dashed var(--line-strong); border-radius: 6px; padding: 1px 8px; }
+
+  /* ================= 6b · os três arquivos ================= */
+  .files { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.4vw; align-items: stretch; }
+  .fcard { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden; }
+  .fhead { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--line); background: #FBFCFD; }
+  .fhead .ico.file { width: 13px; height: 16px; background: var(--navy-3); }
+  .fhead b { font-family: var(--mono); font-weight: 500; font-size: clamp(.82rem, 1.05vw, 1rem); color: var(--navy); }
+  .fhead .role { margin-left: auto; font-family: var(--mono); font-size: clamp(.64rem, .78vw, .75rem); text-transform: uppercase; letter-spacing: .06em; background: var(--orange-soft); color: var(--ink); border-radius: 6px; padding: .25em .6em; white-space: nowrap; }
+  .fbody { padding: 14px 18px; display: grid; gap: 7px; align-content: start; flex: 1; font-size: clamp(.78rem, .98vw, .94rem); line-height: 1.45; }
+  .fbody .kvf { display: grid; grid-template-columns: minmax(9ch, 11ch) minmax(0, 1fr); gap: 2px 10px; }
+  .fbody .kvf span { color: var(--muted); }
+  .fbody .kvf b { font-weight: 500; }
+  .fbody .q { background: #F3F6F9; border-radius: 8px; padding: 4px 9px; color: var(--ink); }
+  .fbody .hd { font-family: var(--mono); color: var(--navy); font-size: .95em; }
+  .fbody .hd i { font-style: normal; color: var(--muted); }
+  .fbody .les { border-left: 3px solid var(--line-strong); padding-left: 9px; }
+  .fbody .les.new { border-color: var(--orange); background: #FFF8F2; padding-block: 3px; }
+  .fbody .les em { font-style: normal; font-family: var(--mono); font-size: .85em; color: var(--muted); display: block; }
+  .ffoot { border-top: 1px solid var(--line); padding: 12px 18px; display: grid; gap: 6px; font-size: clamp(.78rem, .95vw, .92rem); line-height: 1.4; background: #FBFCFD; }
+  .ffoot div { display: grid; grid-template-columns: 9.5em minmax(0, 1fr); gap: 10px; align-items: baseline; }
+  .ffoot span { font-family: var(--mono); font-size: .8em; color: var(--orange); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+  .ffoot p { font-size: inherit; line-height: 1.4; color: var(--body); }
+
+  /* ================= 7 · programa → terminal → resposta ================= */
+  .pipe { display: grid; justify-items: center; width: 100%; max-width: 640px; }
+  .pill { font-family: var(--head); font-weight: 600; font-size: clamp(.85rem, 1.1vw, 1.05rem); background: var(--navy); color: #fff; border-radius: 999px; padding: .6em 1.3em; }
+  .link { width: 2px; height: 3.2vh; background: repeating-linear-gradient(to bottom, var(--line-strong) 0 6px, transparent 6px 10px); }
+  .term { width: 100%; background: var(--ink); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
+  .term .bar { display: flex; gap: 7px; padding: 12px 16px; }
+  .term .bar { align-items: center; }
+  .term .bar i { width: 11px; height: 11px; border-radius: 50%; background: #FF5F57; }
+  .term .bar i:nth-child(2) { background: #FEBC2E; }
+  .term .bar i:nth-child(3) { background: #28C840; }
+  .term .bar span { margin-left: auto; margin-right: auto; padding-right: 40px; font-family: var(--mono); font-size: clamp(.68rem, .82vw, .78rem); color: #7D8A99; }
+  .term pre { padding: 6px 22px 22px; font-family: var(--mono); font-size: clamp(.78rem, 1.02vw, 1rem); color: #E6EBF1; line-height: 1.75; white-space: pre; overflow-x: auto; scrollbar-width: none; }
+  .term .c { color: #6B7A8C; font-style: italic; }
+  .term .p { color: #28C840; font-weight: 500; }
+  .term .cmd { color: #FFFFFF; font-weight: 500; }
+  .term .f { color: var(--orange); }
+  .term .v { color: #8EC5FF; }
+  .term .s { color: #F5D76E; }
+  .term .ok { color: #28C840; }
+  .typed { display: inline-block; vertical-align: bottom; overflow: hidden; white-space: pre; width: 0; }
+  .slide.on .typed.l1 { animation: t22 .8s steps(22, end) .5s forwards; }
+  .slide.on .typed.l2 { animation: t36 1.2s steps(36, end) 1.4s forwards; }
+  .slide.on .typed.l3 { animation: t25 .9s steps(25, end) 2.7s forwards; }
+  @keyframes t22 { to { width: 22ch; } }
+  @keyframes t36 { to { width: 36ch; } }
+  @keyframes t25 { to { width: 25ch; } }
+  .term .later { opacity: 0; }
+  .slide.on .term .later { animation: show .01s linear 3.8s forwards; }
+  @keyframes show { to { opacity: 1; } }
+  .cursor { display: inline-block; width: .6em; height: 1.1em; vertical-align: text-bottom; background: var(--orange); animation: blink 1s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .answer { width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 16px 20px; display: grid; gap: 10px; }
+  .answer .t { font-family: var(--mono); font-size: clamp(.68rem, .85vw, .8rem); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .kv { display: grid; grid-template-columns: minmax(8ch, 12ch) minmax(0, 1fr); gap: 4px 14px; font-size: clamp(.85rem, 1.1vw, 1.02rem); }
+  .kv span { color: var(--muted); }
+  .kv b { font-weight: 500; }
+
+  /* ================= 8 · gráfico de modelos ================= */
+  .chart { position: relative; width: 100%; max-width: 640px; aspect-ratio: 1.15; }
+  .plot { position: absolute; left: 48px; right: 8px; top: 8px; bottom: 44px; border-left: 2px solid var(--line-strong); border-bottom: 2px solid var(--line-strong);
+          background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 25% 25%; background-position: -1px -1px; }
+  .axis { position: absolute; font-family: var(--mono); font-size: clamp(.68rem, .85vw, .8rem); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .axis.x { bottom: 8px; right: 8px; }
+  .axis.y { left: 0; top: 8px; writing-mode: vertical-rl; transform: rotate(180deg); }
+  .dotm { position: absolute; transform: translate(-50%, 50%); display: grid; justify-items: center; gap: 8px; }
+  .dotm .ball { width: var(--s); height: var(--s); border-radius: 50%; background: var(--navy); display: grid; place-items: center; color: #fff; font-family: var(--head); font-weight: 700; font-size: clamp(.9rem, 1.3vw, 1.25rem); box-shadow: var(--shadow); }
+  .dotm.hot .ball { background: var(--orange); color: var(--ink); }
+  .dotm.off .ball { background: #B8C3D0; }
+  .dotm .role { font-size: clamp(.82rem, 1.1vw, 1.05rem); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: .25em .8em; white-space: nowrap; color: var(--ink); }
+  .rule { background: var(--surface); border-left: 4px solid var(--orange); border-radius: 0 14px 14px 0; padding: 2vh 1.6vw; font-size: clamp(.95rem, 1.35vw, 1.25rem); line-height: 1.45; box-shadow: var(--shadow); }
+
+  /* ================= 9 · celular ================= */
+  .phone { width: min(100%, 340px); height: min(70vh, 660px); background: var(--ink); border-radius: 44px; padding: 12px; box-shadow: 0 30px 60px -25px rgba(7, 19, 30, .45); }
+  .screen { height: 100%; background: #EEF2F6; border-radius: 34px; overflow: hidden; display: flex; flex-direction: column; }
+  .screen .top { background: var(--surface); padding: 22px 18px 12px; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid var(--line); }
+  .screen .top b { font-family: var(--head); font-size: .95rem; }
+  .screen .top span { display: block; font-size: .72rem; color: var(--muted); }
+  .thread { flex: 1; padding: 14px 12px; display: flex; flex-direction: column; gap: 8px; justify-content: flex-end; }
+  .b { max-width: 84%; padding: 8px 12px; border-radius: 16px; font-size: clamp(.72rem, .9vw, .86rem); line-height: 1.4; background: var(--surface); color: var(--ink); box-shadow: 0 1px 1px rgba(0,0,0,.04); }
+  .b.me { align-self: flex-end; background: var(--navy); color: #fff; border-bottom-right-radius: 4px; }
+  .b.bot { border-bottom-left-radius: 4px; }
+  .b.win { background: var(--orange); color: var(--ink); font-weight: 600; }
+  .b.img { width: 52%; height: 64px; background: linear-gradient(135deg, #D7E0EA, #EEF2F6); border: 1px solid var(--line); display: grid; place-items: end start; font-family: var(--mono); font-size: .7rem; color: var(--muted); }
+  .when { align-self: center; font-family: var(--mono); font-size: .66rem; color: var(--muted); padding: 2px 0; }
+  .vsteps { list-style: none; display: grid; gap: 0; }
+  .vsteps li { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; padding-bottom: 2.2vh; }
+  .vsteps li:not(:last-child)::before { content: ""; position: absolute; left: calc(1.1em - 1px); top: 2.2em; bottom: 0; width: 2px; background: var(--line-strong); }
+  .vsteps .n { width: 2.2em; height: 2.2em; border-radius: 50%; background: var(--navy); color: #fff; display: grid; place-items: center; font-family: var(--head); font-weight: 600; font-size: clamp(.8rem, 1vw, .95rem); }
+  .vsteps .who { font-family: var(--mono); font-size: clamp(.66rem, .8vw, .78rem); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; display: block; }
+  .vsteps p { font-size: clamp(.9rem, 1.2vw, 1.12rem); }
+  .vsteps li.me .n { background: var(--orange); color: var(--ink); }
+  .vsteps li.me .who { color: var(--orange); }
+
+  /* ================= 10 · portões ================= */
+  .gates { list-style: none; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1.2vw; position: relative; }
+  .gates::before { content: ""; position: absolute; left: 6%; right: 6%; top: 28px; height: 3px; background: var(--line-strong); border-radius: 2px; }
+  .gates li { position: relative; display: grid; justify-items: center; text-align: center; gap: 1.2vh; }
+  .gate { width: 58px; height: 58px; border-radius: 16px; background: var(--surface); border: 2px solid var(--navy); display: grid; place-items: center; position: relative; z-index: 1; color: var(--navy); }
+  .gate svg { width: 26px; height: 26px; }
+  .gates .end .gate { border-radius: 50%; background: var(--navy); color: #fff; }
+  .gates .human .gate { background: var(--orange); border-color: var(--orange); color: var(--ink); }
+  .gates b { font-family: var(--head); font-size: clamp(.9rem, 1.2vw, 1.12rem); }
+  .gates p { font-size: clamp(.78rem, 1vw, .95rem); color: var(--muted); max-width: 18ch; }
+  .wall { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 1.6vw; align-items: stretch; }
+  .wall .side-box { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px 20px; display: grid; gap: 4px; }
+  .wall .side-box span { font-family: var(--mono); font-size: clamp(.66rem, .8vw, .78rem); color: var(--orange); text-transform: uppercase; letter-spacing: .06em; }
+  .wall .divider { width: 0; border-left: 3px dashed var(--line-strong); position: relative; }
+  .wall .divider i { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border-radius: 12px; background: var(--navy); display: grid; place-items: center; color: #fff; }
+  .wall .divider svg { width: 20px; height: 20px; }
+
+  /* ================= 11 · resultado ================= */
+  .result { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6vw; align-items: center; }
+  .donut { position: relative; width: clamp(220px, 26vw, 340px); aspect-ratio: 1; }
+  .donut svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .donut .val { transition: stroke-dashoffset 1.6s cubic-bezier(.2, .7, .2, 1) .4s; }
+  .slide:not(.on) .donut .val { stroke-dashoffset: 534 !important; }
+  .donut .in { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+  .donut .in b { font-family: var(--head); font-size: clamp(3rem, 6.4vw, 6rem); line-height: 1; color: #fff; letter-spacing: -.04em; }
+  .donut .in span { font-size: clamp(.9rem, 1.2vw, 1.15rem); }
+  .bars { display: grid; gap: 1.5vh; }
+  .bars .t { font-family: var(--mono); font-size: clamp(.68rem, .85vw, .8rem); text-transform: uppercase; letter-spacing: .08em; color: var(--on-navy); margin-bottom: .5vh; }
+  .barrow { display: grid; grid-template-columns: minmax(8ch, 10ch) minmax(0, 1fr) 3ch; gap: 14px; align-items: center; font-size: clamp(.9rem, 1.2vw, 1.12rem); }
+  .barrow .tr { height: 14px; border-radius: 7px; background: rgba(255, 255, 255, .06); overflow: hidden; }
+  .barrow .tot { height: 100%; width: var(--w); background: var(--navy-3); border-radius: 7px; position: relative; transition: width 1s cubic-bezier(.2, .7, .2, 1) .5s; }
+  .barrow .done { position: absolute; inset: 0 auto 0 0; width: var(--f); background: var(--orange); border-radius: 7px; }
+  .slide:not(.on) .barrow .tot { width: 0; }
+  .barrow .num { font-family: var(--head); color: #fff; text-align: right; }
+  .legend { display: flex; gap: 18px; font-size: clamp(.78rem, .95vw, .9rem); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
+
+  /* ================= 12 · lições ================= */
+  .lessons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.4vw; }
+  .lesson { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: clamp(18px, 2vw, 30px); display: grid; gap: 1.2vh; align-content: start; box-shadow: var(--shadow); }
+  .specimen { margin-top: .6vh; border-radius: 12px; background: #F3F6F9; padding: 10px 14px; font-family: var(--mono); font-size: clamp(.72rem, .9vw, .86rem); color: var(--navy); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .specimen .chip { background: var(--surface); }
+  .specimen.alert { background: #FDECEC; color: #B42318; }
+  .specimen.add { background: #FFF4EA; color: var(--ink); border-left: 3px solid var(--orange); }
+
+  /* ================= 13 · projeto no Claude ================= */
+  .proj .head { padding: 18px 22px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .proj .head b { font-family: var(--head); font-size: clamp(1rem, 1.35vw, 1.3rem); }
+  .proj .sec { padding: 14px 22px; border-bottom: 1px solid var(--line); display: grid; gap: 8px; }
+  .proj .sec:last-child { border-bottom: 0; }
+  .proj .sh { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .proj .sh span { font-family: var(--mono); font-size: clamp(.68rem, .85vw, .8rem); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .eq { font-family: var(--mono); font-size: clamp(.64rem, .8vw, .76rem); background: var(--orange); color: var(--ink); border-radius: 6px; padding: .2em .6em; white-space: nowrap; }
+  .lines { display: grid; gap: 6px; font-size: clamp(.82rem, 1.05vw, .98rem); }
+  .lines .new { background: #FFF4EA; border-left: 3px solid var(--orange); padding: 2px 8px; color: var(--ink); }
+
+  /* ================= 14 · QR ================= */
+  .qr-wrap { display: grid; grid-template-columns: minmax(0, 1.1fr) auto; gap: 6vw; align-items: center; }
+  .qr-steps { list-style: none; display: grid; gap: 1.4vh; }
+  .qr-steps li { display: flex; gap: 14px; align-items: center; font-size: clamp(1rem, 1.4vw, 1.3rem); color: #fff; }
+  .qr-steps .n { width: 2em; height: 2em; border-radius: 50%; background: var(--orange); color: var(--ink); display: grid; place-items: center; font-family: var(--head); font-weight: 700; font-size: .85em; }
+  .qr-box { position: relative; padding: 22px; }
+  .qr-box::before, .qr-box::after, .qr-box span::before, .qr-box span::after { content: ""; position: absolute; width: 38px; height: 38px; border: 4px solid var(--orange); }
+  .qr-box::before { left: 0; top: 0; border-right: 0; border-bottom: 0; border-radius: 12px 0 0 0; }
+  .qr-box::after { right: 0; top: 0; border-left: 0; border-bottom: 0; border-radius: 0 12px 0 0; }
+  .qr-box span::before { left: 0; bottom: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 12px; }
+  .qr-box span::after { right: 0; bottom: 0; border-left: 0; border-top: 0; border-radius: 0 0 12px 0; }
+  .qr { background: #fff; border-radius: 20px; padding: clamp(12px, 1.4vw, 20px); width: clamp(220px, 25vw, 360px); }
+  .qr svg { display: block; width: 100%; height: auto; }
+  .url { font-family: var(--mono); font-size: clamp(1rem, 1.5vw, 1.4rem); color: #fff; background: var(--navy-2); border-radius: 12px; padding: 1.1vh 1.1vw; justify-self: start; }
+
+  /* ================= HUD ================= */
+  .progress { position: fixed; left: 0; bottom: 0; height: 4px; background: var(--orange); width: 0; transition: width .75s cubic-bezier(.65, 0, .35, 1); z-index: 5; }
+  .count { position: fixed; right: 22px; bottom: 16px; font-family: var(--mono); font-size: .82rem; color: var(--muted); z-index: 5; }
+  body.on-dark .count { color: var(--on-navy); }
+  .hint { position: fixed; left: 22px; bottom: 16px; font-family: var(--mono); font-size: .78rem; color: var(--on-navy); z-index: 5; transition: opacity .4s; }
+  body.moved .hint { opacity: 0; }
+
+  @media (max-width: 900px) {
+    .split, .split.flip, .result, .qr-wrap, .lessons, .wall, .files { grid-template-columns: minmax(0, 1fr); }
+    .leaves, .gates { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .leaves::before, .leaf::before, .root::after, .gates::before, .wall .divider { display: none; }
+    .leaves { margin-top: 2vh; }
+    .orbit { --r: 30vw; }
+    .explorer .body { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .track, .progress, .rise, .barrow .tot, .donut .val { transition: none; }
+    .orbit .spin, .sat .cs, .leaf.pick { animation: none; }
+    .slide.on .typed { animation: none; width: auto; }
+    .slide.on .term .later { animation: none; opacity: 1; }
+  }
+</style>
+</head>
+<body class="on-dark">
+<div class="deck">
+<div class="track" id="track">
+
+  <!-- 1 · capa -->
+  <section class="slide dark">
+    <div class="frame">
+      <div class="split">
+        <div class="copy">
+          <span class="tag rise" style="--d:.15s">Inovação · Driva</span>
+          <h1 class="rise" style="--d:.25s">Como meus agentes trabalham</h1>
+          <p class="lead rise" style="--d:.4s">Pedidos chegam pelo Chat, a IA faz o trabalho e eu só reviso antes de ir para o ar.</p>
+          <p class="mono rise" style="--d:.5s;font-size:clamp(.85rem,1.1vw,1rem)">Yago Santana</p>
+        </div>
+        <div class="stage rise" style="--d:.35s">
+          <div class="orbit" aria-hidden="true">
+            <div class="ring"></div>
+            <div class="ring inner"></div>
+            <div class="spin">
+              <div class="sat" style="--a:-90deg"><div class="cs"><span>Site</span></div></div>
+              <div class="sat" style="--a:-30deg"><div class="cs"><span>Produto</span></div></div>
+              <div class="sat" style="--a:30deg"><div class="cs"><span>Mapa</span></div></div>
+              <div class="sat" style="--a:90deg"><div class="cs"><span>Camadas</span></div></div>
+              <div class="sat" style="--a:150deg"><div class="cs"><span>Reativação</span></div></div>
+              <div class="sat" style="--a:210deg"><div class="cs"><span>Dúvidas</span></div></div>
+            </div>
+            <div class="core">Orquestrador</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · problema -->
+  <section class="slide">
+    <div class="frame">
+      <div class="split">
+        <div class="copy">
+          <span class="tag rise" style="--d:.15s">O problema</span>
+          <h2 class="rise" style="--d:.25s">Todo pedido passava por mim</h2>
+          <ul class="points rise" style="--d:.35s">
+            <li>Ajustes no mapa, no site e no produto chegavam todos na minha DM.</li>
+            <li>Eu lia, entendia, fazia, testava e avisava. Um por um.</li>
+            <li>Resultado: eu virei o <b>gargalo</b> do time.</li>
+          </ul>
+          <p class="lead rise" style="--d:.45s">Objetivo: <b class="o">eu só reviso e aprovo.</b> O resto anda sozinho.</p>
+        </div>
+        <div class="stage">
+          <div class="window inbox rise" style="--d:.3s">
+            <div class="head"><b>Mensagens diretas</b><span class="badge">16</span></div>
+            <div class="msg"><span class="av">C</span><div class="t"><b>Comercial</b><span>A busca por endereço sumiu do mapa</span></div><span class="badge">3</span></div>
+            <div class="msg"><span class="av" style="background:#2E7D6B">CS</span><div class="t"><b>Customer Success</b><span>Consegue subir a planilha do cliente?</span></div><span class="badge">2</span></div>
+            <div class="msg"><span class="av" style="background:#8A4FBF">M</span><div class="t"><b>Marketing</b><span>Troca o banner da página do evento?</span></div><span class="badge">5</span></div>
+            <div class="msg"><span class="av">C</span><div class="t"><b>Comercial</b><span>Isso já subiu?</span></div><span class="badge">1</span></div>
+            <div class="msg"><span class="av" style="background:#B5571F">P</span><div class="t"><b>Produto</b><span>A camada não aparece no mapa</span></div><span class="badge">4</span></div>
+            <div class="msg"><span class="av" style="background:#475467">D</span><div class="t"><b>Diretoria</b><span>Me manda o número de clientes ativos</span></div><span class="badge">1</span></div>
+            <div class="more">e não para de chegar…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · o que é um agente -->
+  <section class="slide">
+    <div class="frame">
+      <div class="split">
+        <div class="copy">
+          <span class="tag rise" style="--d:.15s">O que é um agente</span>
+          <h2 class="rise" style="--d:.25s">Um chat responde. Um agente <span class="o">faz</span>.</h2>
+          <ol class="rows rise" style="--d:.35s">
+            <li><span class="n">1</span><span><b>Pensa:</b> o que eu preciso fazer?</span></li>
+            <li><span class="n">2</span><span><b>Age:</b> abre um arquivo, muda um texto, roda um teste.</span></li>
+            <li><span class="n">3</span><span><b>Confere:</b> funcionou? Ficou como pediram?</span></li>
+            <li><span class="n">4</span><span><b>Repete</b> até terminar o objetivo.</span></li>
+          </ol>
+          <p class="lead rise" style="--d:.45s">É um ciclo, como uma pessoa trabalhando, e não uma resposta única.</p>
+        </div>
+        <div class="stage cycle rise" style="--d:.3s" aria-hidden="true">
+          <svg viewBox="-150 -40 900 680">
+            <circle cx="300" cy="300" r="220" fill="none" stroke="#C9D2DD" stroke-width="3"/>
+            <circle cx="300" cy="300" r="150" fill="#fff" stroke="#E4E7EC" stroke-width="2"/>
+            <text class="mid" x="300" y="292" text-anchor="middle">AGENTE</text>
+            <text class="mid" x="300" y="322" text-anchor="middle">EM AÇÃO</text>
+            <circle r="13" fill="#F07F2D">
+              <animateMotion dur="6s" repeatCount="indefinite" path="M300,80 A220,220 0 1,1 299.9,80"/>
+            </circle>
+            <circle cx="300" cy="80" r="36" fill="#003355"/><text class="num" x="300" y="89" text-anchor="middle">1</text>
+            <circle cx="520" cy="300" r="36" fill="#003355"/><text class="num" x="520" y="309" text-anchor="middle">2</text>
+            <circle cx="300" cy="520" r="36" fill="#003355"/><text class="num" x="300" y="529" text-anchor="middle">3</text>
+            <circle cx="80" cy="300" r="36" fill="#003355"/><text class="num" x="80" y="309" text-anchor="middle">4</text>
+            <text class="lbl" x="300" y="22" text-anchor="middle">Pensa</text>
+            <text class="lbl" x="574" y="312" text-anchor="start">Age</text>
+            <text class="lbl" x="300" y="606" text-anchor="middle">Confere</text>
+            <text class="lbl" x="26" y="312" text-anchor="end">Repete</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · crachá -->
+  <section class="slide">
+    <div class="frame">
+      <div class="split">
+        <div class="copy">
+          <span class="tag rise" style="--d:.15s">Do que um agente é feito</span>
+          <h2 class="rise" style="--d:.25s">É como integrar alguém novo no time</h2>
+          <p class="lead rise" style="--d:.35s">Todo agente tem quatro peças: um <b>cérebro</b>, um <b>briefing</b>, <b>mãos</b> para trabalhar e a <b>documentação</b> do projeto.</p>
+          <p class="lead rise" style="--d:.45s">Pense no crachá de alguém que acabou de entrar.</p>
+        </div>
+        <div class="stage rise" style="--d:.3s">
+          <div class="badge-card">
+            <div class="clip"></div>
+            <div class="badge-top"><span class="av">T</span><div><b>Tadataka</b><span>Especialista em Mapa</span></div></div>
+            <div class="field"><div class="k"><b>Modelo</b><span>o cérebro</span></div><p>Opus para planejar, Sonnet para executar.</p></div>
+            <div class="field"><div class="k"><b>Instruções</b><span>o briefing</span></div><p>Cuida de bugs e melhorias do mapa. Nunca publica sem revisão.</p></div>
+            <div class="field"><div class="k"><b>Ferramentas</b><span>as mãos</span></div><div class="chips"><span class="chip">ler arquivos</span><span class="chip">editar</span><span class="chip">rodar testes</span><span class="chip">pedir revisão</span></div></div>
+            <div class="field"><div class="k"><b>Contexto</b><span>a documentação</span></div><div class="chips"><span class="chip">contexto.md</span><span class="chip">aprendizados.md</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · orquestrador -->
+  <section class="slide">
+    <div class="frame">
+      <span class="tag rise" style="--d:.15s">Como organizei</span>
+      <h2 class="rise" style="--d:.25s">Um atendente e seis especialistas</h2>
+      <div class="tree">
+        <div class="bubble rise" style="--d:.3s"><span class="av">C</span><span><span class="who">Comercial, no Chat</span>“A busca por endereço sumiu do mapa”</span></div>
+        <div class="stem rise" style="--d:.35s"></div>
+        <div class="root rise" style="--d:.4s">
+          <h3>Orquestrador</h3>
+          <p>O único que conversa com as pessoas. Entende, tira dúvidas, confirma e passa para quem entende do assunto.</p>
+        </div>
+        <div class="leaves rise" style="--d:.55s">
+          <div class="leaf"><span class="av">B</span><b>Site</b><span>Bashō</span></div>
+          <div class="leaf"><span class="av">R</span><b>Produto</b><span>Rikyū</span></div>
+          <div class="leaf pick"><em class="got">pedido</em><span class="av">T</span><b>Mapa</b><span>Tadataka</span></div>
+          <div class="leaf"><span class="av">H</span><b>Camadas</b><span>Hokusai</span></div>
+          <div class="leaf"><span class="av">S</span><b>Reativação</b><span>Sontoku</span></div>
+          <div class="leaf"><span class="av">D</span><b>Dúvidas</b><span>Dōgen</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · pasta do especialista -->
+  <section class="slide">
+    <div class="frame">
+      <div class="split">
+        <div class="copy">
+          <span class="tag rise" style="--d:.15s">O especialista, na prática</span>
+          <h2 class="rise" style="--d:.25s">O mesmo Claude, com uma pasta diferente</h2>
+          <ol class="rows rise" style="--d:.35s">
+            <li><span class="n">1</span><span><code>ficha</code>: do que ele cuida, o que perguntar antes de começar e qual modelo usar.</span></li>
+            <li><span class="n">2</span><span><code>contexto</code>: como o projeto dele funciona. O manual.</span></li>
+            <li><span class="n">3</span><span><code>aprendizados</code>: as correções que eu já fiz. Ele lê em toda tarefa.</span></li>
+          </ol>
+          <p class="lead rise" style="--d:.45s">Criar um agente novo é <b>criar uma pasta nova</b>.</p>
+        </div>
+        <div class="stage">
+          <div class="window explorer rise" style="--d:.3s">
+            <div class="bar"><i></i><i></i><i></i><span>agentes</span></div>
+            <div class="body">
+              <div class="side">
+                <div class="node"><span class="ico open"></span>agentes</div>
+                <div class="node l1"><span class="ico"></span>site</div>
+                <div class="node l1"><span class="ico"></span>produto</div>
+                <div class="node l1 open"><span class="ico open"></span>mapa</div>
+                <div class="node l2"><span class="ico file"></span>ficha</div>
+                <div class="node l2"><span class="ico file"></span>contexto</div>
+                <div class="node l2 sel"><span class="ico file"></span>aprendizados</div>
+                <div class="node l1"><span class="ico"></span>camadas</div>
+                <div class="node l1"><span class="ico"></span>reativação</div>
+                <div class="node l1"><span class="ico"></span>dúvidas</div>
+              </div>
+              <div class="preview">
+                <span class="tagx">exemplo</span>
+                <span class="h"># Aprendizados do Mapa</span>
+                <span>- Sempre pedir um print do bug antes de começar.</span>
+                <span>- Testar a busca com e sem número da rua.</span>
+                <span>- Não mudar a cor do pin sem falar com o design.</span>
+                <span class="add">+ Avisar quem pediu quando estiver no ar.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6b · os três arquivos -->
+  <section class="slide">
+    <div class="frame">
+      <span class="tag rise" style="--d:.15s">Os três arquivos do especialista</span>
+      <h2 class="rise" style="--d:.25s">Cada arquivo tem uma função</h2>
+      <div class="files">
+        <div class="fcard rise" style="--d:.3s">
+          <div class="fhead"><span class="ico file"></span><b>ficha</b><span class="role">o crachá</span></div>
+          <div class="fbody">
+            <div class="kvf"><span>Nome</span><b>Tadataka · Mapa</b></div>
+            <div class="kvf"><span>Cuida de</span><b>bugs e melhorias do mapa</b></div>
+            <div class="kvf"><span>Não é dele</span><b>camada de cliente → Camadas</b></div>
+            <div class="kvf"><span>Modelos</span><b>Opus planeja, Sonnet executa</b></div>
+            <span style="color:var(--muted)">Antes de começar, pergunta:</span>
+            <span class="q">Em que parte do mapa?</span>
+            <span class="q">O que acontece hoje? Um print ajuda.</span>
+            <span class="q">O que deveria acontecer?</span>
+          </div>
+          <div class="ffoot">
+            <div><span>Quem usa</span><p>O orquestrador, para saber o que perguntar e para quem mandar o pedido.</p></div>
+            <div><span>Quem escreve</span><p>Eu, uma vez, quando crio o agente.</p></div>
+          </div>
+        </div>
+        <div class="fcard rise" style="--d:.4s">
+          <div class="fhead"><span class="ico file"></span><b>contexto</b><span class="role">o manual</span></div>
+          <div class="fbody">
+            <span class="hd"><i>1</i> O que é e o que não é</span>
+            <span class="hd"><i>2</i> Onde fica cada parte da tela</span>
+            <span class="hd"><i>3</i> Como reproduzir e onde testar</span>
+            <span class="hd"><i>4</i> Pedidos comuns e o caminho</span>
+            <span class="hd"><i>5</i> Armadilhas que já aconteceram</span>
+            <span class="hd"><i>6</i> Checklist antes de entregar</span>
+            <span style="color:var(--muted)">Umas 200 linhas de texto simples, como um onboarding.</span>
+          </div>
+          <div class="ffoot">
+            <div><span>Quem usa</span><p>O especialista, no começo de toda tarefa.</p></div>
+            <div><span>Quem escreve</span><p>Eu, com a ajuda do Claude. Atualizo quando o projeto muda.</p></div>
+          </div>
+        </div>
+        <div class="fcard rise" style="--d:.5s">
+          <div class="fhead"><span class="ico file"></span><b>aprendizados</b><span class="role">a memória</span></div>
+          <div class="fbody">
+            <div class="les"><em>17/09 · tarefa 1</em>O ajuste voltou porque a mudança não aparecia na tela. Conferir no navegador antes de entregar.</div>
+            <div class="les"><em>17/09 · tarefa 28</em>O campo foi para o painel errado. Confirmar onde a pessoa vê antes de mexer.</div>
+            <div class="les new"><em>18/09 · tarefa 31</em>Quando o pedido junta duas coisas, separe e pergunte uma de cada vez.</div>
+          </div>
+          <div class="ffoot">
+            <div><span>Quem usa</span><p>O especialista, em toda tarefa. Vale mais que o manual.</p></div>
+            <div><span>Quem escreve</span><p>Cada ajuste que eu devolvo vira uma linha, com data e tarefa. A mais nova vale mais.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · conexão com o Claude -->
+  <section class="slide">
+    <div class="frame">
+      <div class="split">
+        <div class="copy">
+          <span class="tag rise" style="--d:.15s">Como conecto com o Claude</span>
+          <h2 class="rise" style="--d:.25s">Meu programa “digita” a tarefa para o Claude</h2>
+          <ul class="points rise" style="--d:.35s">
+            <li>Uso o <b>Claude Code</b>, uma versão do Claude que trabalha direto no computador.</li>
+            <li><b>Meu programa</b> manda a tarefa e o contexto, sem abrir nenhuma tela.</li>
+            <li>A resposta volta num <b>formato fixo</b>, como um formulário preenchido.</li>
+          </ul>
+        </div>
+        <div class="stage">
+          <div class="pipe">
+            <span class="pill rise" style="--d:.3s">Meu programa</span>
+            <span class="link rise" style="--d:.35s"></span>
+            <div class="term rise" style="--d:.4s">
+              <div class="bar"><i></i><i></i><i></i><span>terminal</span></div>
+<pre><span class="c"># o que o programa manda (simplificado)</span>
+<span class="p">$</span> <span class="typed l1"><span class="cmd">claude</span> <span class="f">--modelo</span> <span class="v">opus</span> \</span>
+  <span class="typed l2">  <span class="f">--tarefa</span> <span class="s">"a busca sumiu do mapa"</span> \</span>
+  <span class="typed l3">  <span class="f">--contexto</span> <span class="v">agentes/mapa</span></span>
+<span class="later"><span class="ok">✓</span> resposta recebida <span class="cursor"></span></span></pre>
+            </div>
+            <span class="link rise" style="--d:3.9s"></span>
+            <div class="answer rise" style="--d:4.1s">
+              <span class="t">Resposta em formato fixo</span>
+              <div class="kv">
+                <span>especialista</span><b>Mapa</b>
+                <span>falta saber</span><b>nada</b>
+                <span>próximo passo</span><b>planejar a correção</b>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · modelos -->
+  <section class="slide">
+    <div class="frame">
+      <div class="split">
+        <div class="copy">
+          <span class="tag rise" style="--d:.15s">Qual modelo para quê</span>
+          <h2 class="rise" style="--d:.25s">Cada etapa com o modelo certo</h2>
+          <p class="lead rise" style="--d:.35s">Quanto mais inteligente, mais lento e mais caro. Então cada um fica onde rende mais.</p>
+          <p class="rule rise" style="--d:.45s">O mais caro vai onde tem <b>decisão</b>. O mais rápido vai onde tem <b>volume</b>. Como um sênior que define a direção e um time que executa.</p>
+        </div>
+        <div class="stage rise" style="--d:.3s">
+          <div class="chart">
+            <div class="plot">
+              <div class="dotm off" style="left:16%;bottom:18%;--s:clamp(46px,4.6vw,62px)"><span class="ball">H</span><span class="role">Haiku · triagem (troquei)</span></div>
+              <div class="dotm hot" style="left:48%;bottom:50%;--s:clamp(60px,6vw,82px)"><span class="ball">S</span><span class="role">Sonnet · executar e conversar</span></div>
+              <div class="dotm hot" style="left:80%;bottom:78%;--s:clamp(74px,7.4vw,102px)"><span class="ball">O</span><span class="role">Opus · planejar</span></div>
+            </div>
+            <span class="axis y">inteligência</span>
+            <span class="axis x">custo e tempo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · vida de um pedido -->
+  <section class="slide">
+    <div class="frame">
+      <div class="split flip">
+        <div class="stage rise" style="--d:.3s">
+          <div class="phone">
+            <div class="screen">
+              <div class="top"><span class="av" style="background:var(--orange);color:var(--ink)">A</span><div><b>Assistente do Yago</b><span>mensagem direta</span></div></div>
+              <div class="thread">
+                <div class="b me">Oi! A busca por endereço sumiu do mapa</div>
+                <div class="b bot">É a busca do topo, com o número da rua? Consegue mandar um print?</div>
+                <div class="b me img">print.png</div>
+                <div class="b bot">Fechado: o mapa volta a buscar endereço com número. Confirma?</div>
+                <div class="b me">Isso!</div>
+                <div class="b bot">Anotado. Já estamos fazendo.</div>
+                <span class="when">mais tarde</span>
+                <div class="b bot win">Está no ar! Pode testar.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="copy">
+          <span class="tag rise" style="--d:.15s">A vida de um pedido</span>
+          <h2 class="rise" style="--d:.25s">Do Chat até o ar</h2>
+          <ol class="vsteps rise" style="--d:.4s">
+            <li><span class="n">1</span><div><span class="who">Pessoa</span><p>Pede no Chat, do jeito que quiser.</p></div></li>
+            <li><span class="n">2</span><div><span class="who">Orquestrador</span><p>Pergunta o que falta e confirma.</p></div></li>
+            <li><span class="n">3</span><div><span class="who">Especialista</span><p>Planeja e executa numa cópia separada do projeto.</p></div></li>
+            <li><span class="n">4</span><div><span class="who">Especialista</span><p>Envia a mudança para revisão.</p></div></li>
+            <li class="me"><span class="n">5</span><div><span class="who">Eu</span><p>Reviso. Aprovei, vai para o ar sozinho.</p></div></li>
+            <li><span class="n">6</span><div><span class="who">Orquestrador</span><p>Avisa a pessoa: “está no ar”.</p></div></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 · segurança -->
+  <section class="slide">
+    <div class="frame">
+      <span class="tag rise" style="--d:.15s">O que eu não deixo na mão da IA</span>
+      <h2 class="rise" style="--d:.25s">Todo pedido passa por portões fixos</h2>
+      <ol class="gates rise" style="--d:.35s">
+        <li><span class="gate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><b>Pedido</b><p>Chega no Chat</p></li>
+        <li><span class="gate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><b>Confirmado</b><p>Sem o “é isso”, não começa</p></li>
+        <li><span class="gate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><b>Até 2 por pessoa</b><p>Ninguém lota a fila</p></li>
+        <li><span class="gate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><b>No escopo</b><p>“Cria um logo” não vira tarefa</p></li>
+        <li class="human"><span class="gate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span><b>Eu reviso</b><p>Nada vai para o ar sem mim</p></li>
+        <li class="end"><span class="gate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span><b>No ar</b><p>E a pessoa é avisada</p></li>
+      </ol>
+      <div class="wall rise" style="--d:.5s">
+        <div class="side-box"><span>Quem conversa</span><p>O orquestrador fala com as pessoas, mas <b>não mexe no projeto</b>.</p></div>
+        <div class="divider"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></i></div>
+        <div class="side-box"><span>Quem mexe no projeto</span><p>O especialista trabalha no projeto, mas <b>não lê a conversa solta</b>.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 · resultado -->
+  <section class="slide dark">
+    <div class="frame">
+      <span class="tag rise" style="--d:.15s">Resultado</span>
+      <h2 class="rise" style="--d:.25s">103 pedidos em 12 dias</h2>
+      <div class="result">
+        <div class="donut rise" style="--d:.3s">
+          <svg viewBox="0 0 200 200" aria-hidden="true">
+            <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="18"/>
+            <circle class="val" cx="100" cy="100" r="85" fill="none" stroke="#F07F2D" stroke-width="18" stroke-linecap="round" stroke-dasharray="534" style="stroke-dashoffset:130"/>
+          </svg>
+          <div class="in"><b>78</b><span>concluídos</span></div>
+        </div>
+        <div class="bars rise" style="--d:.4s">
+          <span class="t">Pedidos por especialista</span>
+          <div class="barrow"><span>Produto</span><div class="tr"><div class="tot" style="--w:100%"><div class="done" style="--f:100%"></div></div></div><span class="num">23</span></div>
+          <div class="barrow"><span>Mapa</span><div class="tr"><div class="tot" style="--w:87%"><div class="done" style="--f:95%"></div></div></div><span class="num">20</span></div>
+          <div class="barrow"><span>Dúvidas</span><div class="tr"><div class="tot" style="--w:48%"><div class="done" style="--f:91%"></div></div></div><span class="num">11</span></div>
+          <div class="barrow"><span>Reativação</span><div class="tr"><div class="tot" style="--w:39%"><div class="done" style="--f:67%"></div></div></div><span class="num">9</span></div>
+          <div class="barrow"><span>Site</span><div class="tr"><div class="tot" style="--w:22%"><div class="done" style="--f:80%"></div></div></div><span class="num">5</span></div>
+          <div class="barrow"><span>Camadas</span><div class="tr"><div class="tot" style="--w:4.5%"><div class="done" style="--f:100%"></div></div></div><span class="num">1</span></div>
+          <div class="legend"><span><i style="background:var(--orange)"></i>concluídos</span><span><i style="background:var(--navy-3)"></i>ainda abertos</span></div>
+          <p style="font-size:clamp(.8rem,1vw,.95rem)">Os outros 34 não precisaram de especialista: ficaram comigo ou eram perguntas rápidas.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 · lições -->
+  <section class="slide">
+    <div class="frame">
+      <span class="tag rise" style="--d:.15s">O que aprendi</span>
+      <h2 class="rise" style="--d:.25s">Quatro lições</h2>
+      <div class="lessons">
+        <div class="lesson rise" style="--d:.3s"><h3>Especialista acerta mais</h3><p>Um agente genérico erra mais. Contexto focado faz diferença.</p><div class="specimen"><span class="chip">site</span><span class="chip">produto</span><span class="chip">mapa</span><span class="chip">camadas</span><span class="chip">reativação</span><span class="chip">dúvidas</span></div></div>
+        <div class="lesson rise" style="--d:.38s"><h3>Aprendizado é memória</h3><p>Cada correção minha vira regra. O agente melhora com o uso.</p><div class="specimen add">+ Sempre pedir um print do bug antes de começar.</div></div>
+        <div class="lesson rise" style="--d:.46s"><h3>Teste com casos reais</h3><p>Antes de ligar, rodei conversas antigas sem enviar nada.</p><div class="specimen">modo teste · conversas reais · nada é enviado</div></div>
+        <div class="lesson rise" style="--d:.54s"><h3>Erro tem que aparecer</h3><p>Falha silenciosa é a pior. Todo erro precisa avisar alguém.</p><div class="specimen alert">Travou: não consegui avisar quem pediu</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13 · você já pode -->
+  <section class="slide">
+    <div class="frame">
+      <div class="split">
+        <div class="copy">
+          <span class="tag rise" style="--d:.15s">Para você</span>
+          <h2 class="rise" style="--d:.25s">Você já pode ter agentes hoje, sem criar um app</h2>
+          <p class="lead rise" style="--d:.35s">Um <b>Projeto no Claude</b> já funciona como um especialista: tem briefing, documentação e memória das correções.</p>
+          <p class="lead rise" style="--d:.45s">Crie um para cada tipo de tarefa e <b>revise antes de usar</b>.</p>
+        </div>
+        <div class="stage">
+          <div class="window proj rise" style="--d:.3s">
+            <div class="head"><b>Projeto · Textos de interface</b><span class="eq">= um especialista</span></div>
+            <div class="sec">
+              <div class="sh"><span>Instruções</span><span class="eq">= briefing</span></div>
+              <div class="lines">
+                <span>Você escreve textos de interface do nosso produto.</span>
+                <span>Tom direto e amigável. Frases curtas.</span>
+                <span class="new">Botões sempre começam com um verbo.</span>
+              </div>
+            </div>
+            <div class="sec">
+              <div class="sh"><span>Arquivos</span><span class="eq">= contexto</span></div>
+              <div class="chips"><span class="chip">guia-de-tom.pdf</span><span class="chip">glossario.md</span><span class="chip">telas-do-fluxo.png</span></div>
+            </div>
+            <div class="sec">
+              <div class="sh"><span>A linha em laranja</span><span class="eq">= aprendizado</span></div>
+              <p style="font-size:clamp(.82rem,1.05vw,.98rem)">Corrigiu o Claude? Cole a regra nas instruções. Ele não repete o erro.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14 · QR -->
+  <section class="slide dark">
+    <div class="frame">
+      <div class="qr-wrap">
+        <div class="copy">
+          <span class="tag rise" style="--d:.15s">Quer ir além?</span>
+          <h2 class="rise" style="--d:.25s">Monte o seu app de agentes</h2>
+          <ol class="qr-steps rise" style="--d:.35s">
+            <li><span class="n">1</span>Escaneie o código</li>
+            <li><span class="n">2</span>Copie o prompt</li>
+            <li><span class="n">3</span>Cole no Claude Code</li>
+          </ol>
+          <p class="lead rise" style="--d:.45s">Ele te entrevista sobre o seu trabalho e constrói o app com você, uma etapa por vez.</p>
+          <span class="url rise" style="--d:.5s">atlas.driva.io/agentes</span>
+        </div>
+        <div class="qr-box rise" style="--d:.35s"><span></span>
+          <div class="qr" role="img" aria-label="QR code para atlas.driva.io/agentes">
+            <svg viewBox="0 0 330 330"><g transform="scale(10)"><path fill="#fff" d="M0 0h33v33h-33z"/><path stroke="#07131e" d="M2 2.5h7m2 0h3m1 0h2m2 0h1m4 0h7m-29 1h1m5 0h1m12 0h2m1 0h1m5 0h1m-29 1h1m1 0h3m1 0h1m1 0h2m3 0h1m1 0h1m1 0h1m1 0h2m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m3 0h1m3 0h1m3 0h2m2 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h2m3 0h2m1 0h1m1 0h1m3 0h1m1 0h3m1 0h1m-29 1h1m5 0h1m1 0h3m3 0h1m1 0h1m2 0h2m1 0h1m5 0h1m-29 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-19 1h1m2 0h1m1 0h3m2 0h1m-20 1h1m2 0h1m1 0h1m1 0h1m2 0h1m4 0h2m1 0h3m1 0h2m1 0h1m-25 1h4m1 0h1m1 0h1m3 0h2m3 0h1m3 0h1m1 0h1m1 0h3m-29 1h1m2 0h4m1 0h1m2 0h1m2 0h1m2 0h1m2 0h2m2 0h1m1 0h1m1 0h1m-28 1h2m1 0h2m1 0h1m1 0h1m3 0h3m1 0h2m1 0h2m2 0h2m1 0h2m-26 1h1m1 0h2m1 0h2m1 0h1m2 0h4m1 0h1m3 0h1m1 0h1m2 0h1m-29 1h2m2 0h1m2 0h1m2 0h1m1 0h5m5 0h1m1 0h1m1 0h3m-28 1h1m2 0h1m1 0h4m1 0h1m2 0h1m2 0h2m1 0h1m3 0h1m3 0h1m-29 1h3m1 0h2m1 0h1m1 0h1m1 0h1m1 0h6m4 0h1m1 0h1m2 0h1m-28 1h1m1 0h2m1 0h1m3 0h1m2 0h3m1 0h1m1 0h3m6 0h1m-29 1h1m2 0h3m2 0h1m2 0h2m1 0h1m7 0h5m1 0h1m-25 1h1m1 0h1m2 0h1m3 0h4m3 0h1m4 0h1m2 0h1m-24 1h1m3 0h3m1 0h1m1 0h6m2 0h2m-25 1h2m3 0h2m2 0h1m1 0h2m1 0h1m1 0h10m1 0h2m-21 1h2m3 0h4m1 0h3m3 0h1m1 0h1m1 0h1m-29 1h7m3 0h2m1 0h4m2 0h2m1 0h1m1 0h1m3 0h1m-29 1h1m5 0h1m3 0h1m1 0h2m1 0h1m1 0h4m3 0h2m1 0h1m-28 1h1m1 0h3m1 0h1m1 0h2m2 0h2m3 0h8m-25 1h1m1 0h3m1 0h1m2 0h1m1 0h3m3 0h2m4 0h1m3 0h1m-28 1h1m1 0h3m1 0h1m2 0h1m1 0h1m1 0h3m2 0h4m4 0h3m-29 1h1m5 0h1m1 0h1m4 0h2m2 0h1m2 0h4m1 0h1m1 0h2m-29 1h7m3 0h2m1 0h3m1 0h1m2 0h2m2 0h2m1 0h1"/></g></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</div>
+
+<div class="progress" id="progress"></div>
+<div class="count" id="count"></div>
+<div class="hint">clique ou → para avançar</div>
+
+<script>
+  const track = document.getElementById('track');
+  const slides = [...track.children];
+  const total = slides.length;
+  const count = document.getElementById('count');
+  const progress = document.getElementById('progress');
+  let atual = 0;
+
+  function ir(i) {
+    atual = Math.max(0, Math.min(total - 1, i));
+    track.style.transform = `translateX(${-atual * 100}vw)`;
+    slides.forEach((s, k) => s.classList.toggle('on', k === atual));
+    document.body.classList.toggle('on-dark', slides[atual].classList.contains('dark'));
+    if (atual > 0) document.body.classList.add('moved');
+    count.textContent = `${atual + 1} / ${total}`;
+    progress.style.width = `${((atual + 1) / total) * 100}%`;
+    try { history.replaceState(null, '', `#${atual + 1}`); } catch (e) {}
+  }
+
+  addEventListener('keydown', e => {
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); ir(atual + 1); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); ir(atual - 1); }
+    else if (e.key === 'Home') ir(0);
+    else if (e.key === 'End') ir(total - 1);
+  });
+
+  // clique: o quinto esquerdo da tela volta, o resto avança
+  addEventListener('click', e => { ir(e.clientX < innerWidth * 0.2 ? atual - 1 : atual + 1); });
+
+  // toque: deslizar para os lados
+  let x0 = null;
+  addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+  addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 50) ir(dx < 0 ? atual + 1 : atual - 1);
+    x0 = null;
+  });
+  addEventListener('resize', () => ir(atual));
+
+  const inicio = parseInt(location.hash.slice(1), 10);
+  ir(Number.isFinite(inicio) ? inicio - 1 : 0);
+</script>
+</body>
+</html>
