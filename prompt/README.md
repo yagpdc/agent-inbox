@@ -2,7 +2,7 @@
 
 Prompt para o Claude Code construir com você um app local com um orquestrador e agentes especialistas, igual ao deste repositório, adaptado ao seu trabalho.
 
-Também está publicado em [atlas.driva.io/agentes](https://atlas.driva.io/agentes/), que é a página aberta pelo QR code da apresentação.
+Também está publicado em [yagpdc.github.io/agent-inbox/prompt](https://yagpdc.github.io/agent-inbox/prompt/), com um botão de copiar. É a página aberta pelo QR code da [apresentação](../apresentacao/).
 
 ## Como usar
 

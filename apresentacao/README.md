@@ -5,11 +5,11 @@ Slides para explicar o agent-inbox a quem não é dev: o que é um agente, como 
 | Arquivo | O que é |
 |---|---|
 | [`index.html`](index.html) | Os slides (15). Abra no Chrome ou no Edge. |
-| [`PROMPT.md`](PROMPT.md) | O prompt para montar um app igual, pronto para copiar. |
-| [`prompt.html`](prompt.html) | A página com o prompt e o botão de copiar, a mesma de [atlas.driva.io/agentes](https://atlas.driva.io/agentes/). |
-| [`qr-agentes.svg`](qr-agentes.svg) | O QR code do último slide, que leva para essa página. |
+| [`qr-agentes.svg`](qr-agentes.svg) | O QR code do último slide, que leva para a [página do prompt](https://yagpdc.github.io/agent-inbox/prompt/). |
 
-**Ver online:** [yagpdc.github.io/agent-inbox/apresentacao](https://yagpdc.github.io/agent-inbox/apresentacao/) · [página do prompt](https://yagpdc.github.io/agent-inbox/apresentacao/prompt.html)
+O prompt fica na pasta [`prompt/`](../prompt/): o texto para copiar e a página com o botão de copiar.
+
+**Ver online:** [yagpdc.github.io/agent-inbox/apresentacao](https://yagpdc.github.io/agent-inbox/apresentacao/) · [página do prompt](https://yagpdc.github.io/agent-inbox/prompt/)
 
 ## Apresentar
 

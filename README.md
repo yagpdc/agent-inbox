@@ -4,7 +4,7 @@ Assistente local que atende pedidos que chegam por DM no Google Chat e os transf
 
 > **Quer entender ou montar o seu?**
 > - [**Apresentação**](https://yagpdc.github.io/agent-inbox/apresentacao/): 15 slides explicando como funciona, para quem não é dev. Abre direto no navegador ([arquivos](apresentacao/)).
-> - [**Prompt**](apresentacao/PROMPT.md): cole no Claude Code e ele monta um app igual com você, adaptado ao seu trabalho.
+> - [**Prompt**](https://yagpdc.github.io/agent-inbox/prompt/): cole no Claude Code e ele monta um app igual com você, adaptado ao seu trabalho ([texto](prompt/README.md)).
 
 ## Como funciona
 
