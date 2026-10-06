@@ -3,7 +3,7 @@
 Assistente local que atende pedidos que chegam por DM no Google Chat e os transforma em trabalho feito por agentes de IA, com revisão humana no PR.
 
 > **Quer entender ou montar o seu?**
-> - [**Apresentação**](apresentacao/): 15 slides explicando como funciona, para quem não é dev.
+> - [**Apresentação**](https://yagpdc.github.io/agent-inbox/apresentacao/): 15 slides explicando como funciona, para quem não é dev. Abre direto no navegador ([arquivos](apresentacao/)).
 > - [**Prompt**](apresentacao/PROMPT.md): cole no Claude Code e ele monta um app igual com você, adaptado ao seu trabalho.
 
 ## Como funciona

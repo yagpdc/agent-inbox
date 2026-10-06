@@ -9,9 +9,11 @@ Slides para explicar o agent-inbox a quem não é dev: o que é um agente, como 
 | [`prompt.html`](prompt.html) | A página com o prompt e o botão de copiar, a mesma de [atlas.driva.io/agentes](https://atlas.driva.io/agentes/). |
 | [`qr-agentes.svg`](qr-agentes.svg) | O QR code do último slide, que leva para essa página. |
 
+**Ver online:** [yagpdc.github.io/agent-inbox/apresentacao](https://yagpdc.github.io/agent-inbox/apresentacao/) · [página do prompt](https://yagpdc.github.io/agent-inbox/apresentacao/prompt.html)
+
 ## Apresentar
 
-1. Baixe a pasta e abra `index.html` no navegador.
+1. Abra o link acima, ou baixe a pasta e abra `index.html` no navegador.
 2. Aperte F11 para tela cheia.
 3. Para navegar:
    - **Avançar:** clique ou use → (espaço e Enter também funcionam).
